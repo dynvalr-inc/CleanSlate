@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean Slate | Freedom & Mutual Squad Recovery</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f4ff',
+                            100: '#e0e8ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        },
+                        slateDark: {
+                            800: '#0f172a',
+                            900: '#020617',
+                            850: '#090d16',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+        }
+
+        /* Box breathing animation */
+        @keyframes breathe {
+            0% { transform: scale(1); opacity: 0.6; }
+            25% { transform: scale(1.35); opacity: 1; }   /* Inhale */
+            50% { transform: scale(1.35); opacity: 0.95; } /* Hold */
+            75% { transform: scale(1); opacity: 0.6; }     /* Exhale */
+            100% { transform: scale(1); opacity: 0.5; }    /* Hold */
+        }
+
+        .breathing-circle {
+            animation: breathe 16s infinite ease-in-out;
+        }
+
+        /* Glassmorphism card styles */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, onSnapshot, addDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase Configuration Handling
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cleanslate-app-default';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-api-key",
+            authDomain: "demo-app.firebaseapp.com",
+            projectId: "demo-app",
+            storageBucket: "demo-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
+        window.collection = collection;
+        window.query = query;
+        window.onSnapshot = onSnapshot;
+        window.addDoc = addDoc;
+        window.arrayUnion = arrayUnion;
+
+        // Authenticate immediately
+        async function authenticateUser() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth initialization error:", err);
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                window.dispatchEvent(new CustomEvent('auth-ready', { detail: user }));
+            }
+        });
+
+        authenticateUser();
+    </script>
+
+    <!-- Navigation Header -->
+    <header class="glass-panel sticky top-0 z-40 border-b border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid font-bold text-white text-xl">🌱</i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                        Clean Slate
+                        <span id="squad-badge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wide">
+                            Squad Live
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Mutual Recovery & Freedom Network</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div id="user-display-pill" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span id="header-user-name" class="font-semibold text-white">Loading...</span>
+                </div>
+
+                <!-- Emergency Panic / Urge Button -->
+                <button onclick="openPanicModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs sm:text-sm hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-rose-500/20 animate-pulse">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>SOS / Urge Relief</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Live SOS Broadcast Banner Alert (Triggers in real-time when squad member hits SOS) -->
+    <div id="sos-live-banner" class="hidden bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 text-white px-4 py-3 border-b border-rose-400 shadow-xl relative z-30">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 text-xs sm:text-sm font-semibold">
+            <div class="flex items-center gap-3">
+                <span class="p-2 bg-white/20 rounded-xl animate-bounce">🚨</span>
+                <div>
+                    <span id="sos-user-name" class="font-bold underline">A friend</span> is currently experiencing an intense urge! Reach out or send positive energy!
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="sendEncouragement()" class="px-3 py-1.5 rounded-lg bg-white text-rose-700 font-extrabold hover:bg-slate-100 transition-all text-xs">
+                    💬 Send "You Got This!"
+                </button>
+                <button onclick="dismissSosBanner()" class="text-white/80 hover:text-white px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-1 sm:space-x-2 p-1.5 glass-panel rounded-2xl mb-8 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-white bg-brand-600 shadow-md">
+                <i class="fa-solid fa-fire"></i>
+                <span>Tracker</span>
+            </button>
+            <button onclick="switchTab('squad')" id="tab-btn-squad" class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="fa-solid fa-users"></i>
+                <span>Friends Squad</span>
+            </button>
+            <button onclick="switchTab('journal')" id="tab-btn-journal" class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>Check-in Journal</span>
+            </button>
+            <button onclick="switchTab('mindset')" id="tab-btn-mindset" class="nav-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="fa-solid fa-brain"></i>
+                <span>Mindset & Filters</span>
+            </button>
+        </nav>
+
+        <!-- TAB 1: DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active space-y-6">
+            <!-- Streak Hero Card -->
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-slate-800">
+                <div class="absolute -right-16 -top-16 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold mb-3">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Live Freedom Streak
+                        </div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white">Your Recovery Timer</h2>
+                        <p class="text-slate-400 text-xs sm:text-sm mt-1">Every clean minute builds mental clarity & self-mastery.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="openRelapseModal()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 border border-slate-800 hover:border-rose-500/30 text-xs font-semibold transition-all">
+                            <i class="fa-solid fa-rotate-right mr-1.5"></i> Reset Streak
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timer Display -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 my-8">
+                    <div class="glass-card p-4 rounded-2xl text-center border border-slate-800">
+                        <span id="streak-days" class="block text-3xl sm:text-5xl font-extrabold text-white tracking-tight">0</span>
+                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Days Clean</span>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl text-center border border-slate-800">
+                        <span id="streak-hours" class="block text-3xl sm:text-5xl font-extrabold text-brand-400 tracking-tight">00</span>
+                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Hours</span>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl text-center border border-slate-800">
+                        <span id="streak-minutes" class="block text-3xl sm:text-5xl font-extrabold text-white tracking-tight">00</span>
+                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Minutes</span>
+                    </div>
+                    <div class="glass-card p-4 rounded-2xl text-center border border-slate-800">
+                        <span id="streak-seconds" class="block text-3xl sm:text-5xl font-extrabold text-indigo-300 tracking-tight">00</span>
+                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Seconds</span>
+                    </div>
+                </div>
+
+                <!-- Current Level / Rank -->
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 text-xl">
+                            <i class="fa-solid fa-medal"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 block">Current Rank</span>
+                            <span id="rank-title" class="text-sm font-bold text-white">Seedling (Day 0)</span>
+                        </div>
+                    </div>
+                    <span class="text-xs text-slate-400 italic hidden sm:block">"Small daily wins compound into total freedom."</span>
+                </div>
+            </div>
+
+            <!-- Milestone Tracker Section -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-800">
+                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-flag-checkered text-brand-500"></i> Milestone Roadmap
+                </h3>
+                <p class="text-xs text-slate-400 mb-6">Brain rewiring and dopamine reset checkpoints</p>
+
+                <div class="space-y-4" id="milestones-container">
+                    <!-- Milestones rendered via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: FRIENDS SQUAD HUB -->
+        <div id="tab-squad" class="tab-content space-y-6">
+            <!-- Setup Squad Container (Shown if user is NOT in a squad) -->
+            <div id="squad-join-card" class="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800">
+                <div class="max-w-xl mx-auto text-center space-y-4">
+                    <div class="w-12 h-12 rounded-2xl bg-brand-600/20 text-brand-400 flex items-center justify-center mx-auto text-2xl">
+                        <i class="fa-solid fa-user-group"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white">Connect With Your Friends</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">
+                        Quitting alone is tough. Create a private Squad code or enter a code from your friend to join their live leaderboard and support each other!
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                        <!-- Create Squad Form -->
+                        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3 text-left">
+                            <h3 class="font-bold text-white text-sm">Create New Squad</h3>
+                            <p class="text-xs text-slate-400">Start a new group and get a shareable squad code.</p>
+                            <input type="text" id="create-squad-name" placeholder="Squad Name (e.g. Iron Clad)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+                            <button onclick="createSquad()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-md">
+                                Create Squad
+                            </button>
+                        </div>
+
+                        <!-- Join Squad Form -->
+                        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3 text-left">
+                            <h3 class="font-bold text-white text-sm">Join Existing Squad</h3>
+                            <p class="text-xs text-slate-400">Enter the unique code shared by your friend.</p>
+                            <input type="text" id="join-squad-code" placeholder="Enter Squad Code (e.g. SLATE123)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-500">
+                            <button onclick="joinSquad()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-all">
+                                Join Squad
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Squad Dashboard (Shown when user IS in a squad) -->
+            <div id="squad-active-card" class="hidden space-y-6">
+                <!-- Squad Header info banner -->
+                <div class="glass-panel p-6 rounded-3xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h2 id="squad-title-text" class="text-xl font-bold text-white">My Squad</h2>
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">Live Syncing</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Share code with your friends: <b id="squad-code-display" class="text-brand-400 font-mono text-sm uppercase select-all">------</b></p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="copySquadCode()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>Copy Code</span>
+                        </button>
+                        <button onclick="leaveSquad()" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-500/20 hover:text-rose-300 text-slate-400 text-xs transition-all">
+                            Leave
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Squad Feed Messages / Encouragements -->
+                <div id="squad-feed-container" class="hidden glass-panel p-4 rounded-2xl border border-brand-500/30 bg-brand-500/5">
+                    <div class="flex items-center gap-2 text-xs text-brand-300 font-semibold mb-2">
+                        <i class="fa-solid fa-comment-dots"></i> Recent Squad Encouragements:
+                    </div>
+                    <div id="squad-messages-list" class="space-y-1.5 text-xs text-slate-300">
+                        <!-- Encouragements dynamically inserted -->
+                    </div>
+                </div>
+
+                <!-- Real-time Friends Leaderboard -->
+                <div class="glass-panel p-6 rounded-3xl border border-slate-800">
+                    <h3 class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-amber-400"></i> Squad Leaderboard
+                    </h3>
+
+                    <div id="squad-leaderboard-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Live squad members rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Squad Pact -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-800 text-center max-w-2xl mx-auto">
+                <i class="fa-solid fa-handshake-angle text-3xl text-brand-400 mb-3"></i>
+                <h3 class="text-base font-bold text-white">The Brotherhood Pact</h3>
+                <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                    "We commit to total honesty. If one of us experiences an urge, we trigger the SOS button immediately. If one stumbles, we lift them up without judgment."
+                </p>
+            </div>
+        </div>
+
+        <!-- TAB 3: DAILY CHECK-IN JOURNAL -->
+        <div id="tab-journal" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Daily Form -->
+                <div class="lg:col-span-1 glass-panel p-6 rounded-3xl border border-slate-800">
+                    <h3 class="text-lg font-bold text-white mb-2">Daily Check-In</h3>
+                    <p class="text-xs text-slate-400 mb-6">Log daily moods to spot triggers before urges build up.</p>
+
+                    <form id="journal-form" onsubmit="saveJournalEntry(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Today's Mood</label>
+                            <select id="journal-mood" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                                <option value="😊 Energetic & Positive">😊 Energetic & Positive</option>
+                                <option value="😌 Calm & Focused">😌 Calm & Focused</option>
+                                <option value="😐 Neutral">😐 Neutral</option>
+                                <option value="😓 Stressed / Anxious">😓 Stressed / Anxious</option>
+                                <option value="🥱 Tired / Bored">🥱 Tired / Bored</option>
+                                <option value="⚡ High Temptation">⚡ High Temptation</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Peak Urge Severity (1 - 10)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="range" id="journal-urge" min="1" max="10" value="1" oninput="document.getElementById('urge-val').innerText = this.value" class="w-full accent-brand-500">
+                                <span id="urge-val" class="text-sm font-bold text-brand-400 min-w-[20px]">1</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Primary Vulnerability / Trigger</label>
+                            <select id="journal-trigger" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                                <option value="None">None - Smooth Day</option>
+                                <option value="Boredom">Boredom / Free Time</option>
+                                <option value="Stress">Stress & Academic Pressure</option>
+                                <option value="Late Night">Late Night Phone Usage</option>
+                                <option value="Social Media">Social Media Trigger</option>
+                                <option value="Loneliness">Loneliness / Negative Mood</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Positive Replacement Activity</label>
+                            <input type="text" id="journal-activity" placeholder="e.g. Workout, Walk outside, Guitar" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 placeholder-slate-600" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Personal Reflection Note</label>
+                            <textarea id="journal-note" rows="3" placeholder="What went well today? How did you stay strong?" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-500 placeholder-slate-600 resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-all shadow-lg shadow-brand-500/20">
+                            Save Check-In Entry
+                        </button>
+                    </form>
+                </div>
+
+                <!-- History Display -->
+                <div class="lg:col-span-2 glass-panel p-6 rounded-3xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white">Journal History</h3>
+                            <span class="text-xs text-slate-400">Synced to your profile</span>
+                        </div>
+
+                        <div id="journal-logs-container" class="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+                            <!-- Dynamically filled entries -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: MINDSET & RECOVERY EDUCATION -->
+        <div id="tab-mindset" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Urge Surfing Technique Card -->
+                <div class="glass-panel p-6 rounded-3xl border border-slate-800">
+                    <div class="p-3 w-fit rounded-2xl bg-indigo-500/10 text-indigo-400 text-xl mb-4">
+                        <i class="fa-solid fa-water"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">The Urge Surfing Method</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                        An urge is like an ocean wave. It reaches a peak (lasting around 10–15 minutes) and then subsides. You do not need to fight or surrender to it—just ride it without acting.
+                    </p>
+                    <ul class="text-xs text-slate-400 space-y-2 list-disc list-inside">
+                        <li>Locate the physical sensation in your body without panicking.</li>
+                        <li>Take deep slow breaths directly into the urge.</li>
+                        <li>Remind yourself: "This feeling is temporary and will pass shortly."</li>
+                    </ul>
+                </div>
+
+                <!-- Dopamine Reset Card -->
+                <div class="glass-panel p-6 rounded-3xl border border-slate-800">
+                    <div class="p-3 w-fit rounded-2xl bg-emerald-500/10 text-emerald-400 text-xl mb-4">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Brain Rewiring (Neuroplasticity)</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                        Quitting pornography restores natural dopamine receptors, curing brain fog, low energy, and social anxiety.
+                    </p>
+                    <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-emerald-300 font-medium">
+                        💡 Key Timeline: 7 Days (Boosted focus & confidence) • 30 Days (Mental clarity & mood stability) • 90 Days (Complete neurological baseline reset).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Free Filters Section -->
+            <div class="glass-panel p-6 rounded-3xl border border-slate-800">
+                <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-cat text-brand-400"></i> Free Device Filter Setup
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Block adult content across your entire phone/PC for free at the DNS level:</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                        <span class="font-bold text-white block mb-1">1. Cloudflare Family DNS (100% Free)</span>
+                        <p class="text-slate-400 mb-2">Set custom DNS in Wi-Fi settings to automatically filter adult sites.</p>
+                        <code class="block bg-slate-950 p-2 rounded text-brand-300 font-mono text-[11px]">Primary DNS: 1.1.1.3<br>Secondary DNS: 1.0.0.3</code>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                        <span class="font-bold text-white block mb-1">2. NextDNS Device Protection</span>
+                        <p class="text-slate-400 mb-2">Create a free NextDNS account and turn on "SafeSearch" and "Block Explicit Content" globally.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- USER PROFILE INITIAL SETUP MODAL -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full p-6 sm:p-8 rounded-3xl border border-brand-500/30 text-center relative">
+            <div class="w-12 h-12 rounded-2xl bg-brand-600/20 text-brand-400 flex items-center justify-center mx-auto text-2xl mb-4">
+                <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-1">Welcome to Clean Slate</h3>
+            <p class="text-xs text-slate-400 mb-6">Choose a nickname for yourself to start tracking and connect with your squad.</p>
+
+            <form onsubmit="saveUserProfile(event)" class="space-y-4">
+                <input type="text" id="user-nickname-input" placeholder="Your Display Name (e.g. Leo)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-500 text-center" required>
+                <button type="submit" class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-all shadow-lg shadow-brand-500/20">
+                    Start Recovery Journey
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANIC / URGE SURFING MODAL -->
+    <div id="panic-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-xl w-full p-6 sm:p-8 rounded-3xl border border-rose-500/30 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closePanicModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <div class="text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold mb-3">
+                    <i class="fa-solid fa-heart-pulse"></i> Emergency Protocol
+                </div>
+                <h2 class="text-2xl font-bold text-white">Pause. Breathe. Ride it out.</h2>
+                <p class="text-slate-300 text-xs sm:text-sm mt-1">Urges are physical spikes that weaken after 10 minutes. You own your choices.</p>
+            </div>
+
+            <!-- Box Breathing Visual Tool -->
+            <div class="my-8 flex flex-col items-center justify-center">
+                <div class="relative w-44 h-44 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-600 to-rose-500 opacity-30 breathing-circle"></div>
+                    <div class="relative z-10 w-28 h-28 rounded-full bg-slate-900 border border-brand-500/40 flex flex-col items-center justify-center text-center p-2 shadow-2xl">
+                        <span id="breath-phase" class="text-xs font-bold text-brand-300 tracking-wider uppercase">Inhale</span>
+                        <span id="breath-counter" class="text-2xl font-extrabold text-white mt-0.5">4</span>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-4">Box Breathing: 4s Inhale • 4s Hold • 4s Exhale • 4s Hold</p>
+            </div>
+
+            <!-- 5-4-3-2-1 Grounding Checklist -->
+            <div class="space-y-2 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 mb-6">
+                <span class="font-bold text-white block text-sm mb-2">⚡ 5-4-3-2-1 Sensory Grounding</span>
+                <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                    <input type="checkbox" class="accent-brand-500"> 👀 Name 5 physical objects around you
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                    <input type="checkbox" class="accent-brand-500"> ✋ Touch 4 different textures nearby
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                    <input type="checkbox" class="accent-brand-500"> 👂 Listen for 3 distinct background sounds
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                    <input type="checkbox" class="accent-brand-500"> 👃 Smell 2 things (or deep breath in air)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer hover:text-white">
+                    <input type="checkbox" class="accent-brand-500"> 👅 Focus on 1 physical taste
+                </label>
+            </div>
+
+            <!-- Emergency Actions -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button onclick="broadcastSosAlert()" class="py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:brightness-110 text-white font-bold text-xs transition-all shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bullhorn"></i> Broadcast SOS to Squad
+                </button>
+                <button onclick="beatUrgeSuccess()" class="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> Beat The Urge (+1 Win)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RELAPSE / RESET STREAK MODAL -->
+    <div id="relapse-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full p-6 rounded-3xl border border-slate-800 relative">
+            <button onclick="closeRelapseModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <h3 class="text-xl font-bold text-white mb-2">Reset Streak & Learn</h3>
+            <p class="text-xs text-slate-400 mb-4">A lapse is not total defeat—it is information. Identify the trigger and restart immediately with zero guilt.</p>
+
+            <form onsubmit="confirmRelapseReset(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">What triggered the relapse?</label>
+                    <select id="relapse-trigger-input" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                        <option value="Late Night / Fatigue">Late Night / Phone in Bed</option>
+                        <option value="Social Media Content">Social Media Trigger</option>
+                        <option value="Boredom & Alone Time">Boredom & Alone Time</option>
+                        <option value="Stress & Anxiety">Stress & Anxiety</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">What concrete rule will you implement now?</label>
+                    <input type="text" id="relapse-lesson-input" placeholder="e.g. Phone stays outside bedroom at 10 PM" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none placeholder-slate-600" required>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeRelapseModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs">Cancel</button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs">Reset Timer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/60 py-6 text-center text-xs text-slate-500">
+        <p>© Clean Slate Recovery App • Free, Private & Squad Supported</p>
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           APP STATE & FIRESTORE PATHS
+           ========================================================================== */
+        let userId = null;
+        let userData = {
+            displayName: '',
+            streakStart: Date.now(),
+            squadId: null,
+            journal: []
+        };
+        let currentSquadData = null;
+        let squadUnsubscribe = null;
+
+        const MILESTONES = [
+            { name: "24 Hours (First Step)", seconds: 24 * 3600 },
+            { name: "3 Days (Dopamine Baseline Reset)", seconds: 3 * 24 * 3600 },
+            { name: "7 Days (Testosterone & Energy Boost)", seconds: 7 * 24 * 3600 },
+            { name: "14 Days (Brain Fog Clears)", seconds: 14 * 24 * 3600 },
+            { name: "30 Days (Neuroplasticity Rewiring)", seconds: 30 * 24 * 3600 },
+            { name: "90 Days (Complete Baseline Reset)", seconds: 90 * 24 * 3600 }
+        ];
+
+        // Listen for Auth Ready
+        window.addEventListener('auth-ready', async (e) => {
+            const user = e.detail;
+            userId = user.uid;
+            await loadUserProfile();
+        });
+
+        /* ==========================================================================
+           FIRESTORE DATABASE FUNCTIONS
+           ========================================================================== */
+        function getUserDocRef() {
+            const appId = window.appId;
+            return window.doc(window.db, 'artifacts', appId, 'users', userId, 'profile', 'data');
+        }
+
+        function getSquadDocRef(squadId) {
+            const appId = window.appId;
+            return window.doc(window.db, 'artifacts', appId, 'public', 'data', 'squads', squadId);
+        }
+
+        async function loadUserProfile() {
+            if (!userId) return;
+            try {
+                const userDoc = await window.getDoc(getUserDocRef());
+                if (userDoc.exists()) {
+                    userData = { ...userData, ...userDoc.data() };
+                    document.getElementById('header-user-name').innerText = userData.displayName || 'Friend';
+                    document.getElementById('user-display-pill').classList.remove('hidden');
+
+                    if (userData.squadId) {
+                        subscribeToSquad(userData.squadId);
+                    }
+                } else {
+                    // Show Profile Creation Modal
+                    document.getElementById('profile-modal').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Error loading user profile:", err);
+            }
+            renderJournalLogs();
+        }
+
+        async function saveUserProfile(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('user-nickname-input').value.trim();
+            if (!nameInput) return;
+
+            userData.displayName = nameInput;
+            userData.streakStart = Date.now();
+
+            try {
+                await window.setDoc(getUserDocRef(), userData, { merge: true });
+                document.getElementById('header-user-name').innerText = userData.displayName;
+                document.getElementById('user-display-pill').classList.remove('hidden');
+                document.getElementById('profile-modal').classList.add('hidden');
+                syncUserDataToSquad();
+            } catch (err) {
+                console.error("Error saving user profile:", err);
+            }
+        }
+
+        async function syncUserDataToSquad() {
+            if (!userData.squadId || !userId) return;
+            try {
+                const squadRef = getSquadDocRef(userData.squadId);
+                const squadDoc = await window.getDoc(squadRef);
+                if (squadDoc.exists()) {
+                    let members = squadDoc.data().members || {};
+                    members[userId] = {
+                        displayName: userData.displayName,
+                        streakStart: userData.streakStart,
+                        lastSeen: Date.now()
+                    };
+                    await window.updateDoc(squadRef, { members });
+                }
+            } catch (err) {
+                console.error("Error syncing with squad:", err);
+            }
+        }
+
+        /* ==========================================================================
+           SQUAD CREATION & JOINING LOGIC
+           ========================================================================== */
+        async function createSquad() {
+            const squadName = document.getElementById('create-squad-name').value.trim();
+            if (!squadName) {
+                alert("Please enter a squad name!");
+                return;
+            }
+
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const newSquad = {
+                name: squadName,
+                code: code,
+                created: Date.now(),
+                members: {
+                    [userId]: {
+                        displayName: userData.displayName,
+                        streakStart: userData.streakStart,
+                        lastSeen: Date.now()
+                    }
+                },
+                sosAlert: null,
+                encouragements: []
+            };
+
+            try {
+                await window.setDoc(getSquadDocRef(code), newSquad);
+                userData.squadId = code;
+                await window.setDoc(getUserDocRef(), { squadId: code }, { merge: true });
+                subscribeToSquad(code);
+            } catch (err) {
+                console.error("Error creating squad:", err);
+            }
+        }
+
+        async function joinSquad() {
+            const codeInput = document.getElementById('join-squad-code').value.trim().toUpperCase();
+            if (!codeInput) {
+                alert("Please enter a valid Squad Code!");
+                return;
+            }
+
+            try {
+                const squadRef = getSquadDocRef(codeInput);
+                const squadDoc = await window.getDoc(squadRef);
+
+                if (!squadDoc.exists()) {
+                    alert("Squad code not found. Please double check with your friend!");
+                    return;
+                }
+
+                userData.squadId = codeInput;
+                await window.setDoc(getUserDocRef(), { squadId: codeInput }, { merge: true });
+
+                let members = squadDoc.data().members || {};
+                members[userId] = {
+                    displayName: userData.displayName,
+                    streakStart: userData.streakStart,
+                    lastSeen: Date.now()
+                };
+                await window.updateDoc(squadRef, { members });
+
+                subscribeToSquad(codeInput);
+            } catch (err) {
+                console.error("Error joining squad:", err);
+            }
+        }
+
+        function subscribeToSquad(squadId) {
+            if (squadUnsubscribe) squadUnsubscribe();
+
+            const squadRef = getSquadDocRef(squadId);
+            squadUnsubscribe = window.onSnapshot(squadRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    currentSquadData = snapshot.data();
+                    renderSquadUI();
+                } else {
+                    // Squad was removed or invalid
+                    userData.squadId = null;
+                    document.getElementById('squad-join-card').classList.remove('hidden');
+                    document.getElementById('squad-active-card').classList.add('hidden');
+                    document.getElementById('squad-badge').classList.add('hidden');
+                }
+            }, (err) => console.error("Squad snapshot error:", err));
+        }
+
+        async function leaveSquad() {
+            if (!userData.squadId) return;
+            const squadId = userData.squadId;
+            try {
+                const squadRef = getSquadDocRef(squadId);
+                const squadDoc = await window.getDoc(squadRef);
+                if (squadDoc.exists()) {
+                    let members = squadDoc.data().members || {};
+                    delete members[userId];
+                    await window.updateDoc(squadRef, { members });
+                }
+                userData.squadId = null;
+                await window.setDoc(getUserDocRef(), { squadId: null }, { merge: true });
+
+                document.getElementById('squad-join-card').classList.remove('hidden');
+                document.getElementById('squad-active-card').classList.add('hidden');
+                document.getElementById('squad-badge').classList.add('hidden');
+            } catch (err) {
+                console.error("Error leaving squad:", err);
+            }
+        }
+
+        function renderSquadUI() {
+            if (!currentSquadData) return;
+
+            document.getElementById('squad-join-card').classList.add('hidden');
+            document.getElementById('squad-active-card').classList.remove('hidden');
+            document.getElementById('squad-badge').classList.remove('hidden');
+
+            document.getElementById('squad-title-text').innerText = currentSquadData.name || 'My Squad';
+            document.getElementById('squad-code-display').innerText = currentSquadData.code;
+
+            // Check live SOS Alert
+            if (currentSquadData.sosAlert && currentSquadData.sosAlert.userId !== userId && (Date.now() - currentSquadData.sosAlert.timestamp < 10 * 60 * 1000)) {
+                document.getElementById('sos-live-banner').classList.remove('hidden');
+                document.getElementById('sos-user-name').innerText = currentSquadData.sosAlert.displayName || 'A friend';
+            } else {
+                document.getElementById('sos-live-banner').classList.add('hidden');
+            }
+
+            // Render Encouragements list
+            if (currentSquadData.encouragements && currentSquadData.encouragements.length > 0) {
+                document.getElementById('squad-feed-container').classList.remove('hidden');
+                const msgList = document.getElementById('squad-messages-list');
+                msgList.innerHTML = currentSquadData.encouragements.slice(-3).map(m => `
+                    <div><b>${m.from}:</b> "${m.text}"</div>
+                `).join('');
+            } else {
+                document.getElementById('squad-feed-container').classList.add('hidden');
+            }
+
+            // Render Leaderboard
+            const grid = document.getElementById('squad-leaderboard-grid');
+            grid.innerHTML = '';
+
+            const members = Object.entries(currentSquadData.members || {}).map(([id, data]) => ({
+                id,
+                ...data,
+                elapsedMs: Math.max(0, Date.now() - (data.streakStart || Date.now()))
+            })).sort((a, b) => b.elapsedMs - a.elapsedMs);
+
+            members.forEach((m, idx) => {
+                const daysClean = Math.floor(m.elapsedMs / (1000 * 3600 * 24));
+                const hoursClean = Math.floor((m.elapsedMs % (1000 * 3600 * 24)) / (1000 * 3600));
+
+                const isMe = m.id === userId;
+                const card = document.createElement('div');
+                card.className = `glass-card p-4 rounded-2xl border ${isMe ? 'border-brand-500/50 bg-brand-500/10' : 'border-slate-800'}`;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-full ${isMe ? 'bg-brand-500 text-white' : 'bg-slate-800 text-slate-300'} flex items-center justify-center text-xs font-bold">
+                                #${idx + 1}
+                            </span>
+                            <span class="font-bold text-white text-xs sm:text-sm">${m.displayName} ${isMe ? '(You)' : ''}</span>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-brand-300 font-bold">
+                            ${daysClean}d ${hoursClean}h Clean
+                        </span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-brand-500 to-emerald-400" style="width: ${Math.min(100, (daysClean / 90) * 100)}%"></div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function copySquadCode() {
+            if (!currentSquadData?.code) return;
+            const code = currentSquadData.code;
+            const el = document.createElement('textarea');
+            el.value = code;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert(`Squad Code (${code}) copied to clipboard! Share it with your friends.`);
+        }
+
+        /* ==========================================================================
+           REAL-TIME SOS BROADCAST & ENCOURAGEMENTS
+           ========================================================================== */
+        async function broadcastSosAlert() {
+            if (!userData.squadId) {
+                alert("You need to join or create a squad first to send live alerts to your friends!");
+                closePanicModal();
+                return;
+            }
+
+            try {
+                const squadRef = getSquadDocRef(userData.squadId);
+                await window.updateDoc(squadRef, {
+                    sosAlert: {
+                        userId: userId,
+                        displayName: userData.displayName,
+                        timestamp: Date.now()
+                    }
+                });
+                alert("🚨 SOS alert broadcasted to your squad! Stay strong, your friends are notified.");
+                closePanicModal();
+            } catch (err) {
+                console.error("Error sending SOS:", err);
+            }
+        }
+
+        async function sendEncouragement() {
+            if (!userData.squadId) return;
+            try {
+                const squadRef = getSquadDocRef(userData.squadId);
+                const msg = {
+                    from: userData.displayName,
+                    text: "Hold the line! You are stronger than this urge! 🔥",
+                    timestamp: Date.now()
+                };
+                await window.updateDoc(squadRef, {
+                    encouragements: window.arrayUnion(msg)
+                });
+                alert("Encouragement sent to squad feed!");
+            } catch (err) {
+                console.error("Error sending encouragement:", err);
+            }
+        }
+
+        function dismissSosBanner() {
+            document.getElementById('sos-live-banner').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           TIMER & PROGRESS LOGIC
+           ========================================================================== */
+        function updateTimer() {
+            const now = Date.now();
+            const elapsedMs = Math.max(0, now - (userData.streakStart || now));
+            const totalSeconds = Math.floor(elapsedMs / 1000);
+
+            const days = Math.floor(totalSeconds / (3600 * 24));
+            const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            document.getElementById('streak-days').innerText = days;
+            document.getElementById('streak-hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('streak-minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('streak-seconds').innerText = String(seconds).padStart(2, '0');
+
+            // Rank calculation
+            let rank = "Seedling (Day 0)";
+            if (days >= 90) rank = "🏆 Master of Freedom (90+ Days)";
+            else if (days >= 30) rank = "⚡ Mind Rewired (30+ Days)";
+            else if (days >= 14) rank = "🛡️ Habit Crusher (14+ Days)";
+            else if (days >= 7) rank = "🔥 Momentum Builder (7+ Days)";
+            else if (days >= 3) rank = "🌱 Sprout (3+ Days)";
+
+            document.getElementById('rank-title').innerText = rank;
+
+            renderMilestones(totalSeconds);
+        }
+
+        function renderMilestones(currentSeconds) {
+            const container = document.getElementById('milestones-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            MILESTONES.forEach(m => {
+                const progressPct = Math.min(100, Math.floor((currentSeconds / m.seconds) * 100));
+                const isCompleted = currentSeconds >= m.seconds;
+
+                const div = document.createElement('div');
+                div.className = 'glass-card p-4 rounded-2xl border border-slate-800';
+                div.innerHTML = `
+                    <div class="flex items-center justify-between text-xs mb-2">
+                        <span class="font-semibold text-white flex items-center gap-2">
+                            ${isCompleted ? '<i class="fa-solid fa-circle-check text-emerald-400"></i>' : '<i class="fa-regular fa-circle text-slate-500"></i>'}
+                            ${m.name}
+                        </span>
+                        <span class="font-bold ${isCompleted ? 'text-emerald-400' : 'text-slate-400'}">${progressPct}%</span>
+                    </div>
+                    <div class="w-full h-2 rounded-full bg-slate-900 overflow-hidden">
+                        <div class="h-full ${isCompleted ? 'bg-emerald-400' : 'bg-gradient-to-r from-brand-600 to-indigo-400'}" style="width: ${progressPct}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        /* ==========================================================================
+           BREATHING ANIMATION CONTROL
+           ========================================================================== */
+        let breathInterval = null;
+        let breathCount = 4;
+        let phaseIndex = 0;
+        const phases = ['Inhale', 'Hold', 'Exhale', 'Hold'];
+
+        function startBreathing() {
+            clearInterval(breathInterval);
+            breathCount = 4;
+            phaseIndex = 0;
+
+            const phaseEl = document.getElementById('breath-phase');
+            const countEl = document.getElementById('breath-counter');
+
+            breathInterval = setInterval(() => {
+                breathCount--;
+                if (breathCount <= 0) {
+                    phaseIndex = (phaseIndex + 1) % phases.length;
+                    breathCount = 4;
+                }
+                if (phaseEl && countEl) {
+                    phaseEl.innerText = phases[phaseIndex];
+                    countEl.innerText = breathCount;
+                }
+            }, 1000);
+        }
+
+        function stopBreathing() {
+            clearInterval(breathInterval);
+        }
+
+        function openPanicModal() {
+            document.getElementById('panic-modal').classList.remove('hidden');
+            startBreathing();
+        }
+
+        function closePanicModal() {
+            document.getElementById('panic-modal').classList.add('hidden');
+            stopBreathing();
+        }
+
+        function beatUrgeSuccess() {
+            alert("Awesome work riding out that urge! You gained another win for your freedom! 💥");
+            closePanicModal();
+        }
+
+        /* ==========================================================================
+           RELAPSE LOGIC
+           ========================================================================== */
+        function openRelapseModal() {
+            document.getElementById('relapse-modal').classList.remove('hidden');
+        }
+
+        function closeRelapseModal() {
+            document.getElementById('relapse-modal').classList.add('hidden');
+        }
+
+        async function confirmRelapseReset(e) {
+            e.preventDefault();
+            const trigger = document.getElementById('relapse-trigger-input').value;
+            const lesson = document.getElementById('relapse-lesson-input').value;
+
+            userData.streakStart = Date.now();
+
+            const entry = {
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                mood: '😓 Relapse & Reset',
+                urge: '10',
+                trigger: trigger,
+                activity: 'Lesson: ' + lesson,
+                note: 'Reset streak. Refusing to quit trying.'
+            };
+
+            userData.journal = userData.journal || [];
+            userData.journal.unshift(entry);
+
+            try {
+                await window.setDoc(getUserDocRef(), userData, { merge: true });
+                syncUserDataToSquad();
+            } catch (err) {
+                console.error("Error resetting streak:", err);
+            }
+
+            renderJournalLogs();
+            updateTimer();
+            closeRelapseModal();
+        }
+
+        /* ==========================================================================
+           JOURNAL LOGIC
+           ========================================================================== */
+        async function saveJournalEntry(e) {
+            e.preventDefault();
+            const mood = document.getElementById('journal-mood').value;
+            const urge = document.getElementById('journal-urge').value;
+            const trigger = document.getElementById('journal-trigger').value;
+            const activity = document.getElementById('journal-activity').value;
+            const note = document.getElementById('journal-note').value;
+
+            const entry = {
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                mood,
+                urge,
+                trigger,
+                activity,
+                note
+            };
+
+            userData.journal = userData.journal || [];
+            userData.journal.unshift(entry);
+
+            try {
+                await window.setDoc(getUserDocRef(), { journal: userData.journal }, { merge: true });
+            } catch (err) {
+                console.error("Error saving journal:", err);
+            }
+
+            document.getElementById('journal-form').reset();
+            document.getElementById('urge-val').innerText = "1";
+            renderJournalLogs();
+        }
+
+        function renderJournalLogs() {
+            const container = document.getElementById('journal-logs-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const logs = userData.journal || [];
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-4 text-center">No journal logs yet. Save your daily check-in above!</p>`;
+                return;
+            }
+
+            logs.forEach(entry => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-4 rounded-2xl border border-slate-800 text-xs space-y-2';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="font-bold text-white">${entry.date}</span>
+                        <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium">${entry.mood}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-slate-400 pt-1">
+                        <div>Urge Level: <b class="text-brand-400">${entry.urge}/10</b></div>
+                        <div>Trigger: <b class="text-slate-200">${entry.trigger}</b></div>
+                    </div>
+                    ${entry.activity ? `<div class="text-emerald-300"><b>Replacement:</b> ${entry.activity}</div>` : ''}
+                    ${entry.note ? `<div class="text-slate-300 italic bg-slate-900/50 p-2 rounded-xl mt-1">"${entry.note}"</div>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ==========================================================================
+           TAB SWITCHING LOGIC
+           ========================================================================== */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                el.classList.add('text-slate-400');
+            });
+
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            const targetBtn = document.getElementById(`tab-btn-${tabId}`);
+
+            if (targetTab && targetBtn) {
+                targetTab.classList.add('active');
+                targetBtn.classList.remove('text-slate-400');
+                targetBtn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+            }
+        }
+
+        /* ==========================================================================
+           INITIALIZATION
+           ========================================================================== */
+        window.onload = function() {
+            setInterval(updateTimer, 1000);
+            updateTimer();
+        };
+    </script>
+</body>
+</html>
